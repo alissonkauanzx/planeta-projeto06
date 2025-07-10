@@ -250,15 +250,18 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
         if (type === "images") {
           if (projectData.images.length > 0) { alert("Você pode enviar apenas uma foto para o projeto."); setUploading(false); return; }
           const imageUrl = await uploadToCloudinary(file);
+            console.log(`handleFileUpload: Cloudinary URL para ${file.name}:`, imageUrl); // Log URL Cloudinary
           if (imageUrl) uploadedFileObjects.push({ name: file.name, url: imageUrl, size: file.size, type: 'image' });
           else console.warn(`Falha no upload da imagem ${file.name} para Cloudinary.`);
         } else if (type === "videos" || type === "pdfs") {
           const mediaUrl = await uploadToSupabaseStorage(file, type);
+            console.log(`handleFileUpload: Supabase Storage URL para ${file.name} (${type}):`, mediaUrl); // Log URL Supabase
           if (mediaUrl) uploadedFileObjects.push({ name: file.name, url: mediaUrl, size: file.size, type });
           else console.warn(`Falha no upload de ${type} ${file.name} para Supabase Storage.`);
         }
       } catch (error) { console.error("Upload failed for file:", file.name, error); alert(`Erro ao enviar o arquivo ${file.name}.`); }
     }
+      console.log("handleFileUpload: uploadedFileObjects:", uploadedFileObjects); // Log dos arquivos processados
     if (uploadedFileObjects.length > 0) {
       setProjectData((prev) => ({ ...prev, [type]: type === "images" ? uploadedFileObjects : [...prev[type], ...uploadedFileObjects], }));
     }
@@ -272,14 +275,42 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
   const handleSubmit = async () => {
     if (!projectData.title || !projectData.description) { alert("Por favor, preencha todos os campos obrigatórios"); return; }
     if (!currentUser) { alert("Usuário não autenticado."); setCurrentView("login"); return; }
+
     setLoading(true);
-    const newProjectPayload = { title: projectData.title, description: projectData.description, category: projectData.category, ods: projectData.ods, author_id: currentUser.uid, author_name: currentUser.displayName || currentUser.email?.split('@')[0] || "Usuário Anônimo", created_at: new Date().toISOString(), image_url: projectData.images.length > 0 ? projectData.images[0].url : null, video_urls: projectData.videos.map((v: any) => v.url), pdf_urls: projectData.pdfs.map((p: any) => p.url), };
+    console.log("handleSubmit: currentUser UID:", currentUser.uid);
+
+    const newProjectPayload = {
+      title: projectData.title,
+      description: projectData.description,
+      category: projectData.category,
+      ods: projectData.ods,
+      author_id: currentUser.uid,
+      author_name: currentUser.displayName || currentUser.email?.split('@')[0] || "Usuário Anônimo",
+      created_at: new Date().toISOString(),
+      image_url: projectData.images.length > 0 ? projectData.images[0].url : null,
+      video_urls: projectData.videos.map((v: any) => v.url),
+      pdf_urls: projectData.pdfs.map((p: any) => p.url),
+    };
+
+    console.log("handleSubmit: newProjectPayload:", newProjectPayload); // Log do payload
+
     try {
-      const { error } = await supabase.from('projetos').insert([newProjectPayload]).select();
-      if (error) throw error;
-      alert("Projeto enviado com sucesso!"); setCurrentView("projects"); loadProjectsFromSupabase();
-    } catch (error: any) { console.error("Erro ao salvar projeto:", error); alert("Erro ao salvar projeto: " + error.message);
-    } finally { setLoading(false); }
+      const { data, error } = await supabase.from('projetos').insert([newProjectPayload]).select();
+      if (error) {
+        console.error("Erro ao salvar projeto no Supabase:", error);
+        throw error;
+      }
+      console.log("handleSubmit: Projeto salvo com sucesso:", data);
+      alert("Projeto enviado com sucesso!");
+      setCurrentView("projects");
+      loadProjectsFromSupabase();
+    } catch (error: any) {
+      console.error("Erro ao salvar projeto (catch):", error);
+      alert("Erro ao salvar projeto: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+
     setProjectData({ title: "", category: "Educação", description: "", ods: [], images: [], videos: [], pdfs: [], });
   };
 
