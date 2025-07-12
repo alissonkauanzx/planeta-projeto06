@@ -58,7 +58,7 @@ interface Project {
   title: string;
   description: string;
   category: string;
-  author_id: string;
+  userId: string; // Alterado de author_id para userId para corresponder à coluna real
   author_name?: string;
   created_at: string;
   image_url?: string | null;
@@ -74,7 +74,7 @@ interface Project {
 interface Comment {
   id: string | number;
   project_id: string | number;
-  user_id: string;
+  user_id: string; // Mantido como user_id, assumindo que é o nome da coluna na tabela Comentarios
   author_name?: string;
   content: string;
   created_at: string;
@@ -240,11 +240,12 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ currentUser, projects, filt
                 <h1 className="text-2xl font-bold text-white"> Planeta Projeto{" "} <span className="inline-block animate-pulse" style={{ animationDelay: "1s" }}> 🌎 </span> </h1>
               </div>
             </div>
+            {/* Container para os botões Sair e Postar Projeto */}
             <div className="flex flex-col items-end gap-2">
-              <Button onClick={handleLogout} variant="outline" className="relative overflow-hidden group bg-transparent h-11 px-5" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5", boxShadow: "0 0 15px rgba(239, 68, 68, 0.2)", transition: "all 0.3s ease", minWidth: "130px", }} >
+              <Button onClick={handleLogout} variant="outline" className="relative overflow-hidden group bg-transparent h-11 px-5" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5", boxShadow: "0 0 15px rgba(239, 68, 68, 0.2)", transition: "all 0.3s ease", minWidth: "140px", }} >
                 <LogOut className="mr-2 h-4 w-4" /> Sair
               </Button>
-              <Button onClick={() => setCurrentView("create")} className="relative overflow-hidden group h-11 px-5" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", border: "none", boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)", transition: "all 0.3s ease", minWidth: "130px", }} >
+              <Button onClick={() => setCurrentView("create")} className="relative overflow-hidden group h-11 px-5" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", border: "none", boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)", transition: "all 0.3s ease", minWidth: "140px", }} >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 <Plus className="mr-2 h-5 w-5" /> Postar Projeto
               </Button>
@@ -272,18 +273,15 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
         if (type === "images") {
           if (projectData.images.length > 0) { alert("Você pode enviar apenas uma foto para o projeto."); setUploading(false); return; }
           const imageUrl = await uploadToCloudinary(file);
-            console.log(`handleFileUpload: Cloudinary URL para ${file.name}:`, imageUrl); // Log URL Cloudinary
           if (imageUrl) uploadedFileObjects.push({ name: file.name, url: imageUrl, size: file.size, type: 'image' });
           else console.warn(`Falha no upload da imagem ${file.name} para Cloudinary.`);
         } else if (type === "videos" || type === "pdfs") {
           const mediaUrl = await uploadToSupabaseStorage(file, type);
-            console.log(`handleFileUpload: Supabase Storage URL para ${file.name} (${type}):`, mediaUrl); // Log URL Supabase
           if (mediaUrl) uploadedFileObjects.push({ name: file.name, url: mediaUrl, size: file.size, type });
           else console.warn(`Falha no upload de ${type} ${file.name} para Supabase Storage.`);
         }
       } catch (error) { console.error("Upload failed for file:", file.name, error); alert(`Erro ao enviar o arquivo ${file.name}.`); }
     }
-      console.log("handleFileUpload: uploadedFileObjects:", uploadedFileObjects); // Log dos arquivos processados
     if (uploadedFileObjects.length > 0) {
       setProjectData((prev) => ({ ...prev, [type]: type === "images" ? uploadedFileObjects : [...prev[type], ...uploadedFileObjects], }));
     }
@@ -299,14 +297,13 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
     if (!currentUser) { alert("Usuário não autenticado."); setCurrentView("login"); return; }
 
     setLoading(true);
-    console.log("handleSubmit: currentUser UID:", currentUser.uid);
 
     const newProjectPayload = {
       title: projectData.title,
       description: projectData.description,
       category: projectData.category,
       ods: projectData.ods,
-      author_id: currentUser.uid,
+      userId: currentUser.uid, // Usando currentUser.uid para userId
       author_name: currentUser.displayName || currentUser.email?.split('@')[0] || "Usuário Anônimo",
       created_at: new Date().toISOString(),
       image_url: projectData.images.length > 0 ? projectData.images[0].url : null,
@@ -314,15 +311,12 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
       pdf_urls: projectData.pdfs.map((p: any) => p.url),
     };
 
-    console.log("handleSubmit: newProjectPayload:", newProjectPayload); // Log do payload
-
     try {
-      const { data, error } = await supabase.from('Projetos').insert([newProjectPayload]).select();
+      const { data, error } = await supabase.from('projects').insert([newProjectPayload]).select(); // Alterado para 'projects'
       if (error) {
         console.error("Erro ao salvar projeto no Supabase:", error);
         throw error;
       }
-      console.log("handleSubmit: Projeto salvo com sucesso:", data);
       alert("Projeto enviado com sucesso!");
       setCurrentView("projects");
       loadProjectsFromSupabase();
@@ -347,6 +341,7 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
             </div>
             <h1 className="text-2xl font-bold text-white">Planeta Projeto 🌎</h1>
           </div>
+          {/* Container para os botões Sair e Voltar */}
           <div className="flex flex-col items-end gap-2">
             <Button onClick={handleLogout} variant="outline" className="relative overflow-hidden bg-transparent h-11 px-5" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5", boxShadow: "0 0 15px rgba(239, 68, 68, 0.2)", transition: "all 0.3s ease", minWidth: "130px", }} >
               <LogOut className="mr-2 h-4 w-4" /> Sair
@@ -359,3 +354,318 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
       </div>
     </header>
     <div className="p-6 pt-12"> <div className="max-w-5xl mx-auto"> <OptimizedCard> <Card className="relative overflow-hidden" style={{ background: "rgba(51, 65, 85, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "20px", backdropFilter: "blur(20px)", boxShadow: "0 25px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(59, 130, 246, 0.1)", }} > <CardHeader> <CardTitle className="text-3xl text-white flex items-center gap-3" style={{ textShadow: "0 0 20px rgba(59, 130, 246, 0.5)", }} > <div className="p-2 rounded-full" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)", }} > <Plus className="h-6 w-6 text-white" /> </div> Postar Projeto </CardTitle> <CardDescription className="text-slate-300 text-lg"> Compartilhe sua inovação com a galáxia </CardDescription> </CardHeader> <CardContent className="space-y-8"> <div className="grid md:grid-cols-2 gap-6"> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Título do Projeto *</Label> <Input placeholder="Nome do seu projeto" value={projectData.title} onChange={(e) => setProjectData((prev) => ({ ...prev, title: e.target.value }))} className="h-12 text-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "10px", color: "white", backdropFilter: "blur(10px)", }}/> </div> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Categoria</Label> <select value={projectData.category} onChange={(e) => setProjectData((prev) => ({ ...prev, category: e.target.value }))} className="w-full px-4 py-3 text-lg rounded-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", color: "white", backdropFilter: "blur(10px)", }} > <option>Educação</option> <option>Tecnologia</option> <option>Ciência</option> <option>Sustentabilidade</option> </select> </div> </div> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Descrição *</Label> <Textarea placeholder="Descreva seu projeto..." value={projectData.description} onChange={(e) => setProjectData((prev) => ({ ...prev, description: e.target.value }))} className="min-h-[180px] text-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "10px", color: "white", backdropFilter: "blur(10px)", }} /> </div> <div className="space-y-8"> <h3 className="text-white font-semibold text-2xl flex items-center gap-2"> <Zap className="h-6 w-6 text-blue-400" /> Arquivos do Projeto </h3> <div className="grid md:grid-cols-3 gap-8"> <div className="p-6 rounded-xl border" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", }} > <Label className="text-slate-200 flex items-center gap-3 mb-4 text-lg font-medium"> <ImageIcon className="h-6 w-6 text-blue-400" /> Imagens </Label> <input ref={imageInputRef} type="file" accept="image/*" onChange={(e) => handleFileUpload(e.target.files, "images")} className="hidden"/> <Button type="button" variant="outline" className="w-full h-12 relative overflow-hidden bg-transparent" onClick={() => imageInputRef.current?.click()} disabled={uploading || projectData.images.length > 0} style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.4)", color: "#93c5fd", boxShadow: "0 0 15px rgba(59, 130, 246, 0.2)", }} > <UploadIcon className="mr-2 h-5 w-5" /> {uploading && projectData.images.length === 0 ? "Enviando..." : projectData.images.length > 0 ? "Foto Selecionada" : "Selecionar Foto"} </Button> {projectData.images.map((file, idx) => ( <div key={idx} className="flex items-center justify-between p-3 rounded-lg text-sm mt-4" style={{ background: "rgba(51, 65, 85, 0.6)", border: "1px solid rgba(71, 85, 105, 0.4)", }} > <span className="text-slate-300 truncate">{file.name}</span> <Button size="sm" variant="ghost" onClick={() => removeFile("images", idx)} className="text-red-400 hover:text-red-300 h-8 w-8 p-0" > × </Button> </div> ))} </div> <div className="p-6 rounded-xl border" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", }} > <Label className="text-slate-200 flex items-center gap-3 mb-4 text-lg font-medium"> <Video className="h-6 w-6 text-purple-400" /> Vídeos </Label> <input ref={videoInputRef} type="file" multiple accept="video/*" onChange={(e) => handleFileUpload(e.target.files, "videos")} className="hidden"/> <Button type="button" variant="outline" className="w-full h-12 relative overflow-hidden bg-transparent" onClick={() => videoInputRef.current?.click()} disabled={uploading} style={{ background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.4)", color: "#c4b5fd", boxShadow: "0 0 15px rgba(139, 92, 246, 0.2)", }} > <UploadIcon className="mr-2 h-5 w-5" /> {uploading ? "Enviando..." : "Selecionar Vídeos"} </Button> {projectData.videos.map((vid, idx) => ( <div key={idx} className="flex items-center justify-between p-3 rounded-lg text-sm mt-4" style={{ background: "rgba(51, 65, 85, 0.6)", border: "1px solid rgba(71, 85, 105, 0.4)", }} > <span className="text-slate-300 truncate">{vid.name}</span> <Button size="sm" variant="ghost" onClick={() => removeFile("videos", idx)} className="text-red-400 hover:text-red-300 h-8 w-8 p-0" > × </Button> </div> ))} </div> <div className="p-6 rounded-xl border" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", }} > <Label className="text-slate-200 flex items-center gap-3 mb-4 text-lg font-medium"> <FileText className="h-6 w-6 text-green-400" /> Documentos PDF </Label> <input ref={pdfInputRef} type="file" multiple accept=".pdf" onChange={(e) => handleFileUpload(e.target.files, "pdfs")} className="hidden"/> <Button type="button" variant="outline" className="w-full h-12 relative overflow-hidden bg-transparent" onClick={() => pdfInputRef.current?.click()} disabled={uploading} style={{ background: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.4)", color: "#86efac", boxShadow: "0 0 15px rgba(34, 197, 94, 0.2)", }} > <UploadIcon className="mr-2 h-5 w-5" /> {uploading ? "Enviando..." : "Selecionar PDFs"} </Button> {projectData.pdfs.map((pdf, idx) => ( <div key={idx} className="flex items-center justify-between p-3 rounded-lg text-sm mt-4" style={{ background: "rgba(51, 65, 85, 0.6)", border: "1px solid rgba(71, 85, 105, 0.4)", }} > <span className="text-slate-300 truncate">{pdf.name}</span> <Button size="sm" variant="ghost" onClick={() => removeFile("pdfs", idx)} className="text-red-400 hover:text-red-300 h-8 w-8 p-0" > × </Button> </div> ))} </div> </div> </div> <div className="space-y-4"> <Label className="text-slate-200 text-lg font-medium"> Objetivos de Desenvolvimento Sustentável (ODS) </Label> <div className="p-6 rounded-xl border max-h-60 overflow-y-auto" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", }} > <div className="grid grid-cols-1 md:grid-cols-2 gap-3"> {odsOptions.map((ods) => ( <label key={ods.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-600/30 cursor-pointer transition-colors" > <input type="checkbox" checked={projectData.ods.includes(ods.id)} onChange={(e) => { if (e.target.checked) { setProjectData((prev) => ({ ...prev, ods: [...prev.ods, ods.id] })); } else { setProjectData((prev) => ({ ...prev, ods: prev.ods.filter((id) => id !== ods.id) })); } }} className="rounded border-slate-500 text-blue-600" /> <div className="w-5 h-5 rounded" style={{ backgroundColor: ods.color, boxShadow: `0 0 10px ${ods.color}40`, }}/> <span className="text-slate-300"> ODS {ods.id}: {ods.name} </span> </label> ))} </div> </div> </div> {uploading && ( <div className="text-center py-6"> <div className="inline-block w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" style={{ boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)", }} /> <p className="text-slate-400 mt-4 text-lg">Enviando arquivos para o cosmos...</p> </div> )} <div className="flex gap-6 pt-6"> <Button className="flex-1 h-14 text-lg font-semibold relative overflow-hidden group" onClick={handleSubmit} disabled={uploading || parentLoading } style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", border: "none", boxShadow: "0 0 30px rgba(59, 130, 246, 0.4)", }} > {(uploading || parentLoading) && ( <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)", animation: "shimmer 2s linear infinite", }}/> )} {parentLoading ? "Enviando..." : uploading ? "Processando..." : "Enviar Projeto"} </Button> <Button variant="outline" className="h-14 px-8 text-lg bg-transparent" onClick={() => setCurrentView("projects")} disabled={uploading || parentLoading} style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", color: "#e2e8f0", boxShadow: "0 0 15px rgba(71, 85, 105, 0.3)", }} > Cancelar </Button> </div> </CardContent> </Card> </OptimizedCard> </div> </div> </div> );
+};
+
+const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({ selectedProject, setSelectedProject, currentUser, newComment, setNewComment, setCurrentView, canEditProject, handleEditProject, handleDeleteProject, handleAddComment, setLoading, odsOptions }) => {
+  if (!selectedProject) return null;
+  const canUserEdit = canEditProject(selectedProject);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (selectedProject?.id) {
+        try {
+          const { data: commentsData, error } = await supabase.from('Comentarios').select('*').eq('project_id', selectedProject.id).order('created_at', { ascending: true }); // Alterado para 'Comentarios'
+          if (error) throw error;
+          if (typeof setSelectedProject === 'function') {
+            setSelectedProject((prev: Project | null) => prev ? ({ ...prev, comments: commentsData || [] }) : null );
+          }
+        } catch (error: any) { alert("Erro ao carregar comentários: " + error.message);
+        }
+      } else {
+         if (typeof setSelectedProject === 'function') {
+            setSelectedProject((prev: Project | null) => prev ? ({ ...prev, comments: [] }) : null);
+         }
+      }
+    };
+    fetchComments();
+  }, [selectedProject?.id, setSelectedProject, setLoading]);
+
+  return ( <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0, 0, 0, 0.8)", backdropFilter: "blur(10px)", paddingTop: "80px", }} > <div className="max-w-5xl max-h-[calc(90vh-80px)] overflow-y-auto w-full relative" style={{ background: "rgba(15, 23, 42, 0.95)", border: "1px solid rgba(59, 130, 246, 0.3)", borderRadius: "20px", backdropFilter: "blur(20px)", boxShadow: "0 25px 50px rgba(0, 0, 0, 0.5), 0 0 50px rgba(59, 130, 246, 0.2)", marginTop: "0", }} > <div className="sticky top-0 left-0 right-0 z-[60] p-4 flex items-center justify-between bg-slate-900/80 backdrop-blur-md border-b border-slate-700" > <div className="flex items-center gap-4"> <Button onClick={() => {setSelectedProject(null); setCurrentView("projects");}} variant="outline" className="h-11 px-5"> Voltar </Button> {canUserEdit && ( <Badge className="flex items-center gap-2 px-3 py-2" style={{ background: "linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.3))", border: "1px solid rgba(34, 197, 94, 0.4)", color: "#86efac", boxShadow: "0 0 15px rgba(34, 197, 94, 0.3)", }} > Seu Projeto </Badge> )} </div> <div className="flex items-center gap-3"> {canUserEdit && ( <div className="flex gap-3"> <Button onClick={() => handleEditProject(selectedProject)} size="sm" variant="outline" className="h-11 px-4"> <Edit className="h-4 w-4 mr-2" /> Editar </Button> <Button onClick={() => handleDeleteProject(selectedProject)} size="sm" variant="destructive" className="h-11 px-4"> <Trash2 className="h-4 w-4 mr-2" /> Apagar </Button> </div> )} <Button onClick={() => {setSelectedProject(null); setCurrentView("projects");}} variant="ghost" size="icon" className="text-slate-400 hover:text-white h-11 w-11" > <X className="h-6 w-6" /> </Button> </div> </div> <div className="p-8 space-y-8"> <div className="relative"> <div className="flex items-center gap-3 mb-4"> <Badge style={{ background: "linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.3))", border: "1px solid rgba(59, 130, 246, 0.4)", color: "#93c5fd", boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)", }} > <Sparkles className="mr-2 h-4 w-4" /> {selectedProject.category} </Badge> </div> <h1 className="text-4xl font-bold text-white mb-4 relative" style={{textShadow: "0 0 30px rgba(59, 130, 246, 0.5)"}} > {selectedProject.title} </h1> {selectedProject.ods && selectedProject.ods.length > 0 && ( <div className="mb-6"> <h4 className="text-slate-300 text-lg mb-3 font-medium">Objetivos de Desenvolvimento Sustentável:</h4> <div className="flex flex-wrap gap-3"> {selectedProject.ods.map((odsId: number) => { const ods = odsOptions.find((o) => o.id === odsId); return ods ? ( <div key={odsId} className="flex items-center gap-3 px-4 py-2 rounded-full text-white font-medium" style={{ backgroundColor: ods.color, boxShadow: `0 0 20px ${ods.color}40`, }} > <span className="font-bold">ODS {odsId}</span> <span className="text-sm opacity-90">{ods.name}</span> </div> ) : null; })} </div> </div> )} <div className="flex items-center gap-6 text-slate-400"> <div className="flex items-center gap-3"> <Avatar className="h-8 w-8" style={{ border: "2px solid rgba(59, 130, 246, 0.4)", boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)", }} > <AvatarFallback className="text-white font-bold" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", }} > {(selectedProject.author_name || "??").substring(0,2).toUpperCase()} </AvatarFallback> </Avatar> <span className="font-medium">{selectedProject.author_name || "Autor Desconhecido"}</span> </div> <div className="flex items-center gap-2"> <Calendar className="h-5 w-5" /> <span className="font-mono">{selectedProject.created_at ? new Date(selectedProject.created_at).toLocaleDateString() : "Data Indisponível"}</span> </div> <div className="flex items-center gap-2"> <Eye className="h-5 w-5" /> <span className="font-mono">{selectedProject.views || 0}</span> </div> </div> </div> {selectedProject.image_url && ( <div className="space-y-6"> <h3 className="text-white font-semibold text-2xl flex items-center gap-3"> <Star className="h-6 w-6 text-blue-400" /> Foto </h3> <div className="relative group overflow-hidden rounded-xl"> <img src={selectedProject.image_url} alt={`Foto do Projeto ${selectedProject.title}`} className="w-full h-auto max-h-[500px] object-contain border border-slate-700" style={{ borderRadius: "12px", boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)", }} /> </div> </div> )} {selectedProject.video_urls && selectedProject.video_urls.length > 0 && ( <div className="space-y-6"> <h3 className="text-white font-semibold text-2xl flex items-center gap-3"> <Video className="h-6 w-6 text-purple-400" /> Vídeos </h3> <div className="grid gap-6"> {selectedProject.video_urls.map((videoUrl: string, idx: number) => ( <div key={idx} className="relative group overflow-hidden rounded-xl" style={{ border: "1px solid rgba(71, 85, 105, 0.6)", boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)", }} > <video controls preload="metadata" className="w-full h-80 object-cover" style={{ borderRadius: "12px" }} > <source src={videoUrl} type="video/mp4" /> Seu navegador não suporta vídeos. </video> </div> ))} </div> </div> )} {selectedProject.pdf_urls && selectedProject.pdf_urls.length > 0 && ( <div className="space-y-6"> <h3 className="text-white font-semibold text-2xl flex items-center gap-3"> <FileText className="h-6 w-6 text-green-400" /> Documentos PDF </h3> <div className="grid gap-4"> {selectedProject.pdf_urls.map((pdfUrl: string, idx: number) => ( <div key={idx} className="p-6 rounded-xl" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(34, 197, 94, 0.4)", backdropFilter: "blur(10px)", boxShadow: "0 0 20px rgba(34, 197, 94, 0.2)", }} > <div className="flex items-center justify-between"> <div className="flex items-center gap-4"> <FileText className="h-10 w-10 text-green-400" /> <span className="text-slate-300 text-lg font-medium">Documento PDF {idx + 1}</span> </div> <Button size="sm" variant="outline" onClick={() => window.open(pdfUrl, "_blank")} style={{ background: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.4)", color: "#86efac", boxShadow: "0 0 15px rgba(34, 197, 94, 0.3)", }} > Abrir PDF </Button> </div> </div> ))} </div> </div> )} <div className="relative"> <h3 className="text-white font-semibold text-2xl mb-4">Descrição</h3> <div className="p-6 rounded-xl relative overflow-hidden" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", }} > <div className="absolute inset-0 opacity-5" style={{ background: `linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent)`, backgroundSize: "200% 200%", animation: "gradientShift 10s ease infinite", }} /> <p className="text-slate-300 leading-relaxed text-lg relative">{selectedProject.description}</p> </div> </div> <div className="pt-8" style={{ borderTop: "1px solid rgba(71, 85, 105, 0.3)", }} > <h3 className="text-white font-semibold text-2xl mb-6 flex items-center gap-3"> <MessageCircle className="h-6 w-6 text-green-400" /> Comentários ({(selectedProject.comments || []).length}) </h3> {currentUser && ( <div className="space-y-4 mb-8"> <Textarea placeholder="Adicione um comentário..." value={newComment} onChange={(e) => setNewComment(e.target.value)} className="min-h-[120px] text-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "12px", color: "white", backdropFilter: "blur(10px)", }} /> <Button onClick={handleAddComment} disabled={!newComment.trim()} className="h-12 px-8 text-lg font-semibold relative overflow-hidden" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", border: "none", boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)", }} > <Send className="mr-2 h-5 w-5" /> Enviar </Button> </div> )} <div className="space-y-4 max-h-80 overflow-y-auto"> {(selectedProject.comments || []).map((comment: Comment, index: number) => ( <div key={comment.id || index} className="p-6 rounded-xl relative overflow-hidden" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", animationDelay: `${index * 0.1}s`, animation: "fadeInUp 0.6s ease-out forwards", }} > <div className="absolute inset-0 opacity-5" style={{ background: `linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent)`, backgroundSize: "200% 100%", animation: `scanLine ${8 + index}s linear infinite`, }} /> <div className="flex items-center gap-3 mb-3 relative"> <Avatar className="h-8 w-8" style={{ border: "2px solid rgba(59, 130, 246, 0.4)", boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)", }} > <AvatarFallback className="text-white font-bold" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", }} > {comment.author_name?.substring(0,2).toUpperCase() || '??'} </AvatarFallback> </Avatar> <span className="text-white font-medium text-lg">{comment.author_name || "Usuário"}</span> <span className="text-slate-400 font-mono text-xs"> {comment.created_at ? new Date(comment.created_at).toLocaleString() : ""} </span> </div> <p className="text-slate-300 relative text-lg leading-relaxed">{comment.content}</p> </div> ))} {(selectedProject.comments || []).length === 0 && ( <div className="text-center py-12"> <div className="text-6xl mb-4">🌌</div> <p className="text-slate-400 text-xl">Nenhum comentário ainda. Seja o primeiro a explorar!</p> </div> )} </div> </div> </div> </div> </div> );
+};
+
+
+export default function PlanetaProjeto() {
+  const [currentView, setCurrentView] = useState("login");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUserType | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  const odsOptions = [ { id: 1, name: "Erradicação da Pobreza", color: "#E5243B" }, { id: 2, name: "Fome Zero", color: "#DDA63A" }, { id: 3, name: "Saúde e Bem-Estar", color: "#4C9F38" }, { id: 4, name: "Educação de Qualidade", color: "#C5192D" }, { id: 5, name: "Igualdade de Gênero", color: "#FF3A21" }, { id: 6, name: "Água Potável e Saneamento", color: "#26BDE2" }, { id: 7, name: "Energia Limpa e Acessível", color: "#FCC30B" }, { id: 8, name: "Trabalho Decente", color: "#A21942" }, { id: 9, name: "Inovação e Infraestrutura", color: "#FD6925" }, { id: 10, name: "Redução das Desigualdades", color: "#DD1367" }, { id: 11, name: "Cidades Sustentáveis", color: "#FD9D24" }, { id: 12, name: "Consumo Responsável", color: "#BF8B2E" }, { id: 13, name: "Ação Contra Mudança Climática", color: "#3F7E44" }, { id: 14, name: "Vida na Água", color: "#0A97D9" }, { id: 15, name: "Vida Terrestre", color: "#56C02B" }, { id: 16, name: "Paz e Justiça", color: "#00689D" }, { id: 17, name: "Parcerias", color: "#19486A" }, ];
+
+  const loadProjectsFromSupabase = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: projectData, error: projectError } = await supabase.from('projects').select('*').order('created_at', { ascending: false }); // Alterado para 'projects'
+      if (projectError) throw projectError;
+      setProjects(projectData || []);
+    } catch (error: any) {
+      console.error("Erro ao buscar projetos:", error);
+      alert("Erro ao carregar projetos: " + error.message);
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const adminUID = 'khhron4qibzdyajfvkn6zisapgr2'; // Seu UID de admin em minúsculas
+        const userData: CurrentUserType = {
+          ...user,
+          isAdmin: user.uid.toLowerCase() === adminUID
+        };
+        setCurrentUser(userData);
+        setIsLoggedIn(true);
+        if (currentView === "login" || currentView === "register") {
+            setCurrentView("projects");
+        }
+        loadProjectsFromSupabase();
+      } else {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+        setCurrentView("login");
+        setProjects([]);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, [loadProjectsFromSupabase, currentView]);
+
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = filterCategory === "all" || project.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = ["all", "Educação", "Tecnologia", "Ciência", "Sustentabilidade"];
+
+  const canEditProject = useCallback((project: Project) => {
+    if (!currentUser || !project) return false;
+    // Permite edição se for o autor OU se for admin
+    return currentUser.uid === project.userId || currentUser.isAdmin;
+  }, [currentUser]);
+
+  const handleLogin = useCallback(async () => {
+    if (!loginEmail || !loginPassword) { alert("Preencha e-mail e senha."); return; }
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      setLoginEmail(""); setLoginPassword("");
+    } catch (e: any) { alert("Erro no login: " + e.message); }
+    finally { setLoading(false); }
+  }, [loginEmail, loginPassword]);
+
+  const handleRegister = useCallback(async () => {
+    if (!registerEmail || !registerPassword) { alert("Preencha e-mail e senha."); return; }
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, registerEmail, registerPassword);
+      alert("Conta criada com sucesso! Você será logado automaticamente.");
+      setRegisterEmail(""); setRegisterPassword("");
+    } catch (e: any) { alert("Erro no registro: " + e.message); }
+    finally { setLoading(false); }
+  }, [registerEmail, registerPassword]);
+
+  const handleLogout = useCallback(async () => {
+    setLoading(true);
+    try { await signOut(auth); setSelectedProject(null); }
+    catch (e: any) { alert("Erro ao sair: " + e.message); }
+    finally { setLoading(false); }
+  }, []);
+
+  const uploadToCloudinary = async (file: File): Promise<string | null> => {
+    if (!file || !CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) { console.error("Cloudinary config is missing or file not provided."); alert("Erro na configuração do upload de imagem."); return null; }
+    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
+    const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    try {
+      const response = await fetch(url, { method: "POST", body: formData });
+      if (response.ok) { const res = await response.json(); return res.secure_url; }
+      else { const errorData = await response.json().catch(() => ({})); console.error("Cloudinary upload error:", errorData); alert(`Erro no upload da imagem: ${errorData.error?.message || response.statusText}`); return null; }
+    } catch (e: any) { console.error("Network error during Cloudinary upload:", e); alert("Erro de rede ao enviar imagem: " + e.message); return null; }
+  };
+
+  const uploadToSupabaseStorage = async (file: File, type: 'videos' | 'pdfs'): Promise<string | null> => {
+    if (!file || !supabase) { console.error("Supabase client/file not available."); alert("Erro no sistema de arquivos."); return null; }
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser?.uid || 'unknown_user'}/${type}/${Date.now()}.${fileExt}`;
+    try {
+      const { error: uploadError } = await supabase.storage.from('project_media').upload(fileName, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) {
+        console.error(`Supabase storage upload error (${type}):`, uploadError);
+        alert(`Erro ao enviar ${type}: ${uploadError.message}`); // Mostrar erro específico do Supabase
+        return null;
+      }
+      const { data: publicUrlData } = supabase.storage.from('project_media').getPublicUrl(fileName);
+      if (publicUrlData?.publicUrl) return publicUrlData.publicUrl;
+      else { console.error("Failed to get public URL from Supabase."); alert("Upload bem-sucedido, mas falha ao obter URL."); return null;}
+    } catch (e: any) { console.error(`Supabase storage upload error (catch) (${type}):`, e); alert(`Erro ao enviar ${type}: ${e.message}`); return null; }
+  };
+
+  const handleAddCommentProjectDetail = useCallback(async () => {
+      if (!newComment.trim() || !currentUser || !selectedProject) { alert("Login e comentário são necessários."); return; }
+      const payload = { project_id: selectedProject.id, user_id: currentUser.uid, author_name: currentUser.displayName || currentUser.email?.split('@')[0] || "Anônimo", content: newComment, created_at: new Date().toISOString() };
+      try {
+        const { data: savedComment, error } = await supabase.from('Comentarios').insert([payload]).select().single(); // Alterado para 'Comentarios'
+        if (error) throw error;
+        setSelectedProject(prev => prev ? ({ ...prev, comments: [...(prev.comments || []), savedComment] }) : null);
+        setNewComment("");
+      } catch (e: any) { console.error("Erro ao adicionar comentário:", e); alert("Erro: " + e.message); }
+  }, [newComment, currentUser, selectedProject, setSelectedProject, setNewComment]);
+
+  const handleEditProjectDetail = useCallback(async (project: Project) => {
+      if (!currentUser || !canEditProject(project)) { alert("Não autorizado."); return; } // Usando canEditProject
+      const newTitle = prompt("Novo título:", project.title);
+      const newDesc = prompt("Nova descrição:", project.description);
+      if (newTitle === null || newDesc === null) { alert("Edição cancelada."); return; }
+      if (!newTitle.trim() || !newDesc.trim()) { alert("Título/descrição não podem ser vazios."); return; }
+      setLoading(true);
+      try {
+        // A política RLS garantirá que apenas o proprietário ou admin possa atualizar.
+        const { data, error } = await supabase.from('projects').update({ title: newTitle, description: newDesc }).eq('id', project.id).select().single(); // Alterado para 'projects'
+        if (error) throw error;
+        alert("Projeto atualizado!");
+        setSelectedProject(data);
+        loadProjectsFromSupabase();
+      } catch (e: any) { console.error("Erro ao editar projeto:", e); alert("Erro: " + e.message); }
+      finally { setLoading(false); }
+  }, [currentUser, loadProjectsFromSupabase, setLoading, setSelectedProject, canEditProject]); // Adicionado canEditProject
+
+  const handleDeleteProjectDetail = useCallback(async (project: Project) => {
+    if (!currentUser || !canEditProject(project)) { alert("Não autorizado."); return; } // Usando canEditProject
+    if (confirm(`Apagar "${project.title}"?`)) {
+      setLoading(true);
+      try {
+        // A política RLS garantirá que apenas o proprietário ou admin possa deletar.
+        const { error } = await supabase.from('projects').delete().eq('id', project.id); // Alterado para 'projects'
+        if (error) throw error;
+        alert("Projeto apagado!");
+        setCurrentView("projects");
+        loadProjectsFromSupabase();
+        setSelectedProject(null);
+      } catch (e: any) { console.error("Erro ao apagar projeto:", e); alert("Erro: " + e.message); }
+      finally { setLoading(false); }
+    }
+  },[currentUser, loadProjectsFromSupabase, setCurrentView, setLoading, setSelectedProject, canEditProject]); // Adicionado canEditProject
+
+  if (loading && currentUser === null && (currentView === "login" || currentView === "register" )) {
+    return ( <div className="min-h-screen flex items-center justify-center bg-slate-900"> <div className="text-white text-2xl">Carregando Universo... ✨</div> </div> );
+  }
+
+  return (
+    <div className="min-h-screen relative">
+      <OptimizedSpaceBackground />
+
+      {currentView === "login" &&
+        <LoginView
+          loginEmail={loginEmail} setLoginEmail={setLoginEmail}
+          loginPassword={loginPassword} setLoginPassword={setLoginPassword}
+          handleLogin={handleLogin} setCurrentView={setCurrentView} loading={loading}
+        />}
+      {currentView === "register" &&
+        <RegisterView
+          registerEmail={registerEmail} setRegisterEmail={setRegisterEmail}
+          registerPassword={registerPassword} setRegisterPassword={setRegisterPassword}
+          handleRegister={handleRegister} setCurrentView={setCurrentView} loading={loading}
+        />}
+
+      {isLoggedIn && currentUser && currentView === "projects" &&
+        <ProjectsView
+          currentUser={currentUser} projects={projects} filteredProjects={filteredProjects}
+          searchTerm={searchTerm} setSearchTerm={setSearchTerm}
+          filterCategory={filterCategory} setFilterCategory={setFilterCategory}
+          categories={categories} handleLogout={handleLogout}
+          setCurrentView={setCurrentView} setSelectedProject={setSelectedProject}
+          canEditProject={canEditProject} odsOptions={odsOptions}
+        />}
+      {isLoggedIn && currentUser && currentView === "create" &&
+        <CreateProjectView
+          currentUser={currentUser} handleLogout={handleLogout}
+          setCurrentView={setCurrentView}
+          uploadToCloudinary={uploadToCloudinary}
+          uploadToSupabaseStorage={uploadToSupabaseStorage}
+          loadProjectsFromSupabase={loadProjectsFromSupabase}
+          setLoading={setLoading} loading={loading} odsOptions={odsOptions}
+        />}
+      {isLoggedIn && currentUser && currentView === "project-detail" && selectedProject &&
+        <ProjectDetailView
+          selectedProject={selectedProject} setSelectedProject={setSelectedProject}
+          currentUser={currentUser}
+          newComment={newComment} setNewComment={setNewComment}
+          setCurrentView={setCurrentView} canEditProject={canEditProject}
+          handleEditProject={handleEditProjectDetail}
+          handleDeleteProject={handleDeleteProjectDetail}
+          handleAddComment={handleAddCommentProjectDetail}
+          setLoading={setLoading} odsOptions={odsOptions}
+        />}
+
+      {!isLoggedIn && !["login", "register"].includes(currentView) &&
+        <LoginView
+            loginEmail={loginEmail} setLoginEmail={setLoginEmail}
+            loginPassword={loginPassword} setLoginPassword={setLoginPassword}
+            handleLogin={handleLogin} setCurrentView={setCurrentView} loading={loading}
+        />}
+
+      {(isLoggedIn && (currentView === "projects" || currentView === "create")) && (
+        <footer
+          className="relative z-10 py-8 overflow-hidden"
+          style={{
+            background: "rgba(15, 23, 42, 0.95)",
+            backdropFilter: "blur(20px)",
+            borderTop: "1px solid rgba(59, 130, 246, 0.3)",
+          }}
+        >
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              background: `
+                linear-gradient(90deg,
+                  transparent,
+                  rgba(59, 130, 246, 0.2),
+                  transparent,
+                  rgba(147, 51, 234, 0.2),
+                  transparent
+                )
+              `,
+              backgroundSize: "400% 100%",
+              animation: "energyFlow 12s linear infinite",
+            }}
+          />
+          <div className="container mx-auto px-4 text-center text-slate-400 relative">
+            <p className="text-lg">&copy; 2025 Planeta Projeto – Explorando o infinito juntos.</p>
+          </div>
+        </footer>
+      )}
+
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes scanLine { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes titleShine { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes energyFlow { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes orbit { 0% { transform: rotate(0deg) translateX(30px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(30px) rotate(-360deg); } }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+      `}</style>
+    </div>
+  )
+}
