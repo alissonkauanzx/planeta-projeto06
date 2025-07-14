@@ -233,12 +233,13 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ currentUser, projects, filt
           <div className="flex flex-wrap items-center justify-between gap-y-3 min-h-[48px] w-full">
             <div className="flex items-center gap-3">
               <div className="relative p-2 sm:p-3 rounded-full" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", }} >
-                <Planet className="h-7 w-7 sm:h-8 sm:w-8 text-white animate-spin" style={{ animationDuration: "10s" }} /> {/* Restaurado animate-spin */}
+                <Planet className="h-7 w-7 sm:h-8 sm:w-8 text-white animate-spin" style={{ animationDuration: "10s" }} />
+                {[...Array(6)].map((_, i) => ( <div key={i} className="absolute w-2 h-2 bg-blue-300 rounded-full" style={{ top: `${Math.sin((i * Math.PI) / 3) * 25 + 50}%`, left: `${Math.cos((i * Math.PI) / 3) * 25 + 50}%`, animation: `orbit ${3 + i * 0.3}s linear infinite`, transformOrigin: "50% 50%", }} /> ))}
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white"> Planeta Projeto{" "} <span className="inline-block" style={{ animationDelay: "1s" }}> 🌎 </span> </h1>  {/* Removido animate-pulse do emoji para teste */}
+              <h1 className="text-xl sm:text-2xl font-bold text-white"> Planeta Projeto{" "} <span className="inline-block"> 🌎 </span> </h1>
             </div>
             <div className="flex flex-col items-end gap-2 ml-auto">
-              <Button onClick={handleLogout} variant="outline" className="relative overflow-hidden group bg-transparent h-10 px-3 sm:h-11 sm:px-5 text-xs sm:text-sm" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5", boxShadow: "0 0 15px rgba(239, 68, 68, 0.2)", transition: "all 0.3s ease", minWidth: "120px", }} >  {/* Ajustado minWidth */}
+              <Button onClick={handleLogout} variant="outline" className="relative overflow-hidden group bg-transparent h-10 px-3 sm:h-11 sm:px-5 text-xs sm:text-sm" style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.4)", color: "#fca5a5", boxShadow: "0 0 15px rgba(239, 68, 68, 0.2)", transition: "all 0.3s ease", minWidth: "120px", }} >
                 <LogOut className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Sair
               </Button>
               <Button onClick={() => setCurrentView("create")} className="relative overflow-hidden group h-10 px-3 sm:h-11 sm:px-5 text-xs sm:text-sm" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", border: "none", boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)", transition: "all 0.3s ease", minWidth: "120px", }} >
@@ -310,15 +311,14 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
     try {
       const { data, error } = await supabase.from('projects').insert([newProjectPayload]).select();
       if (error) {
-        console.error("Erro ao salvar projeto no Supabase:", error);
-        throw error; // Lança o erro para ser pego pelo catch e exibir a mensagem
+        throw error;
       }
       alert("Projeto enviado com sucesso!");
       setCurrentView("projects");
       loadProjectsFromSupabase();
     } catch (error: any) {
       console.error("Erro ao salvar projeto (catch):", error);
-      alert("Erro ao salvar projeto: " + (error.message || error)); // Mostra a mensagem de erro do Supabase
+      alert("Erro ao salvar projeto: " + (error.message || error));
     } finally {
       setLoading(false);
     }
@@ -333,7 +333,8 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
         <div className="flex flex-wrap items-center justify-between gap-y-3 min-h-[48px] w-full">
           <div className="flex items-center gap-3">
             <div className="relative p-2 sm:p-3 rounded-full" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", }} >
-              <Planet className="h-7 w-7 sm:h-8 sm:w-8 text-white animate-spin" style={{ animationDuration: "10s" }} /> {/* Restaurado animate-spin */}
+              <Planet className="h-7 w-7 sm:h-8 sm:w-8 text-white animate-spin" style={{ animationDuration: "10s" }} />
+              {[...Array(6)].map((_, i) => ( <div key={i} className="absolute w-2 h-2 bg-blue-300 rounded-full" style={{ top: `${Math.sin((i * Math.PI) / 3) * 25 + 50}%`, left: `${Math.cos((i * Math.PI) / 3) * 25 + 50}%`, animation: `orbit ${3 + i * 0.3}s linear infinite`, transformOrigin: "50% 50%", }} /> ))}
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white">Planeta Projeto 🌎</h1>
           </div>
@@ -499,13 +500,13 @@ export default function PlanetaProjeto() {
     const fileExt = file.name.split('.').pop();
     const fileName = `${currentUser?.uid || 'unknown_user'}/${type}/${Date.now()}.${fileExt}`;
     try {
-      const { error: uploadError } = await supabase.storage.from('project.midia').upload(fileName, file, { cacheControl: '3600', upsert: false }); // Corrigido nome do bucket
+      const { error: uploadError } = await supabase.storage.from('project.midia').upload(fileName, file, { cacheControl: '3600', upsert: false });
       if (uploadError) {
         console.error(`Supabase storage upload error (${type}):`, uploadError);
         alert(`Erro ao enviar ${type}: ${uploadError.message}`);
         return null;
       }
-      const { data: publicUrlData } = supabase.storage.from('project.midia').getPublicUrl(fileName); // Corrigido nome do bucket
+      const { data: publicUrlData } = supabase.storage.from('project.midia').getPublicUrl(fileName);
       if (publicUrlData?.publicUrl) return publicUrlData.publicUrl;
       else { console.error("Failed to get public URL from Supabase."); alert("Upload bem-sucedido, mas falha ao obter URL."); return null;}
     } catch (e: any) { console.error(`Supabase storage upload error (catch) (${type}):`, e); alert(`Erro ao enviar ${type}: ${e.message}`); return null; }
@@ -513,7 +514,6 @@ export default function PlanetaProjeto() {
 
   const handleAddCommentProjectDetail = useCallback(async () => {
       if (!newComment.trim() || !currentUser || !selectedProject) { alert("Login e comentário são necessários."); return; }
-      // Assumindo que a tabela Comentarios tem uma coluna created_at gerenciada pelo Supabase ou default now()
       const payload = { project_id: selectedProject.id, user_id: currentUser.uid, author_name: currentUser.displayName || currentUser.email?.split('@')[0] || "Anônimo", content: newComment };
       try {
         const { data: savedComment, error } = await supabase.from('Comentarios').insert([payload]).select().single();
