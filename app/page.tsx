@@ -1,7 +1,6 @@
 "use client"
 
-import { upload as vercelBlobUpload } from "@vercel/blob/client"
-import React, { useState, useRef, useCallback, useEffect, ChangeEvent, FormEvent } from "react"
+import React, { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -53,7 +52,6 @@ interface CurrentUserType extends FirebaseUser {
   isAdmin?: boolean;
 }
 
-// Interface ajustada para refletir a estrutura real do banco de dados (sem arrays)
 interface Project {
   id: string | number;
   title: string;
@@ -128,7 +126,7 @@ interface CreateProjectViewProps {
   handleLogout: () => Promise<void>;
   setCurrentView: (view: string) => void;
   uploadToCloudinary: (file: File) => Promise<string | null>;
-  uploadToSupabaseStorage: (file: File, type: 'video' | 'pdf') => Promise<string | null>; // Alterado tipo
+  uploadToSupabaseStorage: (file: File, type: 'video' | 'pdf') => Promise<string | null>;
   loadProjectsFromSupabase: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   loading: boolean;
@@ -297,6 +295,7 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
       }
 
       const newProjectPayload = {
+        id: crypto.randomUUID(), // Gerando ID no cliente
         title: projectData.title,
         description: projectData.description,
         category: projectData.category,
@@ -497,7 +496,7 @@ export default function PlanetaProjeto() {
     } catch (e: any) { console.error("Network error during Cloudinary upload:", e); alert("Erro de rede ao enviar imagem: " + e.message); return null; }
   };
 
-  const uploadToSupabaseStorage = async (file: File, type: 'video' | 'pdf'): Promise<string | null> => { // Alterado o tipo
+  const uploadToSupabaseStorage = async (file: File, type: 'video' | 'pdf'): Promise<string | null> => {
     if (!file || !supabase) { console.error("Supabase client/file not available."); alert("Erro no sistema de arquivos."); return null; }
     const fileExt = file.name.split('.').pop();
     const fileName = `${currentUser?.uid || 'unknown_user'}/${type}/${Date.now()}.${fileExt}`;
