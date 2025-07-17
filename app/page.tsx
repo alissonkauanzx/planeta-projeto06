@@ -133,7 +133,6 @@ interface CreateProjectViewProps {
   odsOptions: any[];
 }
 
-// Nova interface para a View de Edição
 interface EditProjectViewProps {
   project: Project;
   currentUser: CurrentUserType | null;
@@ -379,7 +378,7 @@ const EditProjectView: React.FC<EditProjectViewProps> = ({ project, currentUser,
     }
   }, [project]);
 
-  const handleUpdate = async () => {
+  const handleUpdateProject = async () => {
     if (!projectData.title || !projectData.description) { alert("Título e descrição são obrigatórios."); return; }
     if (!currentUser) { alert("Usuário não autenticado."); return; }
 
@@ -393,19 +392,24 @@ const EditProjectView: React.FC<EditProjectViewProps> = ({ project, currentUser,
     };
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('projects')
         .update(updatedProjectPayload)
-        .eq('id', project.id)
-        .select()
-        .single();
+        .eq('id', project.id);
+
+      // @ts-ignore
+      if (!currentUser.isAdmin) {
+        query = query.eq('userId', currentUser.uid);
+      }
+
+      const { data, error } = await query.select().single();
 
       if (error) throw error;
 
       alert("Projeto atualizado com sucesso!");
-      setSelectedProject(data); // Atualiza os dados do projeto selecionado
-      setCurrentView("project-detail"); // Volta para a tela de detalhes
-      loadProjectsFromSupabase(); // Recarrega a lista de projetos
+      setSelectedProject(data);
+      setCurrentView("project-detail");
+      loadProjectsFromSupabase();
     } catch (error: any) {
       console.error("Erro ao atualizar projeto:", error);
       alert("Erro ao atualizar projeto: " + error.message);
@@ -435,7 +439,7 @@ const EditProjectView: React.FC<EditProjectViewProps> = ({ project, currentUser,
           </div>
         </div>
       </header>
-      <div className="p-6 pt-12"> <div className="max-w-5xl mx-auto"> <OptimizedCard> <Card className="relative overflow-hidden" style={{ background: "rgba(51, 65, 85, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "20px", backdropFilter: "blur(20px)", boxShadow: "0 25px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(59, 130, 246, 0.1)", }} > <CardHeader> <CardTitle className="text-3xl text-white flex items-center gap-3" style={{ textShadow: "0 0 20px rgba(59, 130, 246, 0.5)", }} > <Edit className="h-6 w-6 text-white" /> Editando: {project.title} </CardTitle> <CardDescription className="text-slate-300 text-lg"> Modifique as informações do seu projeto. </CardDescription> </CardHeader> <CardContent className="space-y-8"> <div className="grid md:grid-cols-2 gap-6"> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Título do Projeto *</Label> <Input placeholder="Nome do seu projeto" value={projectData.title} onChange={(e) => setProjectData((prev) => ({ ...prev, title: e.target.value }))} className="h-12 text-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "10px", color: "white", backdropFilter: "blur(10px)", }}/> </div> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Categoria</Label> <select value={projectData.category} onChange={(e) => setProjectData((prev) => ({ ...prev, category: e.target.value }))} className="w-full px-4 py-3 text-lg rounded-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", color: "white", backdropFilter: "blur(10px)", }} > <option>Educação</option> <option>Tecnologia</option> <option>Ciência</option> <option>Sustentabilidade</option> </select> </div> </div> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Descrição *</Label> <Textarea placeholder="Descreva seu projeto..." value={projectData.description} onChange={(e) => setProjectData((prev) => ({ ...prev, description: e.target.value }))} className="min-h-[180px] text-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "10px", color: "white", backdropFilter: "blur(10px)", }} /> </div> <div className="space-y-4"> <Label className="text-slate-200 text-lg font-medium"> Objetivo de Desenvolvimento Sustentável (ODS) </Label> <div className="p-6 rounded-xl border max-h-60 overflow-y-auto" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", }} > <div className="grid grid-cols-1 md:grid-cols-2 gap-3"> {odsOptions.map((ods) => ( <label key={ods.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-600/30 cursor-pointer transition-colors" > <input type="radio" name="ods" value={ods.id} checked={projectData.ods === ods.id} onChange={(e) => setProjectData(prev => ({...prev, ods: parseInt(e.target.value)}))} className="form-radio text-blue-600"/> <div className="w-5 h-5 rounded" style={{ backgroundColor: ods.color, boxShadow: `0 0 10px ${ods.color}40`, }}/> <span className="text-slate-300"> ODS {ods.id}: {ods.name} </span> </label> ))} </div> </div> </div> <div className="flex gap-6 pt-6"> <Button className="flex-1 h-14 text-lg font-semibold" onClick={handleUpdate} disabled={parentLoading}> {parentLoading ? "Salvando..." : "Salvar Alterações"} </Button> </div> </CardContent> </Card> </OptimizedCard> </div> </div> </div>
+      <div className="p-6 pt-12"> <div className="max-w-5xl mx-auto"> <OptimizedCard> <Card className="relative overflow-hidden" style={{ background: "rgba(51, 65, 85, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "20px", backdropFilter: "blur(20px)", boxShadow: "0 25px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(59, 130, 246, 0.1)", }} > <CardHeader> <CardTitle className="text-3xl text-white flex items-center gap-3" style={{ textShadow: "0 0 20px rgba(59, 130, 246, 0.5)", }} > <Edit className="h-6 w-6 text-white" /> Editando: {project.title} </CardTitle> <CardDescription className="text-slate-300 text-lg"> Modifique as informações do seu projeto. Arquivos de mídia não podem ser alterados aqui. </CardDescription> </CardHeader> <CardContent className="space-y-8"> <div className="grid md:grid-cols-2 gap-6"> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Título do Projeto *</Label> <Input placeholder="Nome do seu projeto" value={projectData.title} onChange={(e) => setProjectData((prev) => ({ ...prev, title: e.target.value }))} className="h-12 text-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "10px", color: "white", backdropFilter: "blur(10px)", }}/> </div> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Categoria</Label> <select value={projectData.category} onChange={(e) => setProjectData((prev) => ({ ...prev, category: e.target.value }))} className="w-full px-4 py-3 text-lg rounded-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", color: "white", backdropFilter: "blur(10px)", }} > <option>Educação</option> <option>Tecnologia</option> <option>Ciência</option> <option>Sustentabilidade</option> </select> </div> </div> <div className="space-y-3"> <Label className="text-slate-200 text-lg font-medium">Descrição *</Label> <Textarea placeholder="Descreva seu projeto..." value={projectData.description} onChange={(e) => setProjectData((prev) => ({ ...prev, description: e.target.value }))} className="min-h-[180px] text-lg" style={{ background: "rgba(71, 85, 105, 0.8)", border: "1px solid rgba(71, 85, 105, 0.8)", borderRadius: "10px", color: "white", backdropFilter: "blur(10px)", }} /> </div> <div className="space-y-4"> <Label className="text-slate-200 text-lg font-medium"> Objetivo de Desenvolvimento Sustentável (ODS) </Label> <div className="p-6 rounded-xl border max-h-60 overflow-y-auto" style={{ background: "rgba(71, 85, 105, 0.4)", border: "1px solid rgba(71, 85, 105, 0.6)", backdropFilter: "blur(10px)", }} > <div className="grid grid-cols-1 md:grid-cols-2 gap-3"> {odsOptions.map((ods) => ( <label key={ods.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-600/30 cursor-pointer transition-colors" > <input type="radio" name="ods" value={ods.id} checked={projectData.ods === ods.id} onChange={(e) => setProjectData(prev => ({...prev, ods: parseInt(e.target.value)}))} className="form-radio text-blue-600"/> <div className="w-5 h-5 rounded" style={{ backgroundColor: ods.color, boxShadow: `0 0 10px ${ods.color}40`, }}/> <span className="text-slate-300"> ODS {ods.id}: {ods.name} </span> </label> ))} </div> </div> </div> <div className="flex gap-6 pt-6"> <Button className="flex-1 h-14 text-lg font-semibold" onClick={handleUpdateProject} disabled={parentLoading}> {parentLoading ? "Salvando..." : "Salvar Alterações"} </Button> </div> </CardContent> </Card> </OptimizedCard> </div> </div> </div>
   );
 };
 
@@ -619,7 +623,6 @@ export default function PlanetaProjeto() {
       setLoading(true);
       try {
         let query = supabase.from('projects').delete().eq('id', project.id);
-        // Apenas o dono pode apagar seu próprio projeto, a menos que seja admin
         // @ts-ignore
         if (!currentUser.isAdmin) {
           query = query.eq('userId', currentUser.uid);
