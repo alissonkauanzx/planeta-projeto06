@@ -190,9 +190,7 @@ const LoginView: React.FC<LoginViewProps> = ({ loginEmail, setLoginEmail, loginP
   <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", }} >
     <div style={{ width: "100%", maxWidth: "400px", backgroundColor: "rgba(15, 23, 42, 0.95)", padding: "30px", borderRadius: "15px", border: "1px solid rgba(59, 130, 246, 0.3)", backdropFilter: "blur(20px)", boxShadow: "0 25px 50px rgba(0, 0, 0, 0.5), 0 0 50px rgba(59, 130, 246, 0.1)", }} >
       <div style={{ textAlign: "center", marginBottom: "30px" }}>
-        <div className="relative p-3 rounded-full flex items-center justify-center" style={{ width: '80px', height: '80px', margin: '0 auto 20px', background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", }} >
-          <Circle className="h-full w-full text-white animate-spin" style={{ animationDuration: "10s" }} />
-        </div>
+        <div style={{ width: "80px", height: "80px", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", borderRadius: "50%", margin: "0 auto 20px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", }} > 🪐 </div>
         <h1 style={{ color: "white", fontSize: "28px", margin: "0 0 10px 0", fontWeight: "bold" }}> Planeta Projeto </h1>
         <p style={{ color: "#94a3b8", margin: 0 }}>Entre na sua conta para explorar o cosmos</p>
       </div>
@@ -243,9 +241,8 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ currentUser, projects, filt
         <div className="container mx-auto px-4 py-4 relative">
           <div className="flex flex-wrap items-center justify-between gap-y-3 min-h-[48px] w-full">
             <div className="flex items-center gap-3">
-              <div className="relative p-2 sm:p-3 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", width: '48px', height: '48px' }} >
-                <div className="w-full h-full rounded-full border-2 border-white/50 animate-spin" style={{animationDuration: '10s'}}></div>
-                {[...Array(6)].map((_, i) => ( <div key={i} className="absolute w-2 h-2 bg-blue-300 rounded-full" style={{ top: `${Math.sin((i * Math.PI) / 3) * 25 + 50}%`, left: `${Math.cos((i * Math.PI) / 3) * 25 + 50}%`, animation: `orbit ${3 + i * 0.3}s linear infinite`, transformOrigin: "50% 50%", }} /> ))}
+              <div className="relative p-2 sm:p-3 rounded-full flex items-center justify-center text-2xl" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", width: '48px', height: '48px' }} >
+                🪐
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-white"> Planeta Projeto </h1>
             </div>
