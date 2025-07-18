@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
+  Circle, // Usando o ícone de círculo
   Plus,
   Search,
   Eye,
@@ -190,7 +191,7 @@ const LoginView: React.FC<LoginViewProps> = ({ loginEmail, setLoginEmail, loginP
     <div style={{ width: "100%", maxWidth: "400px", backgroundColor: "rgba(15, 23, 42, 0.95)", padding: "30px", borderRadius: "15px", border: "1px solid rgba(59, 130, 246, 0.3)", backdropFilter: "blur(20px)", boxShadow: "0 25px 50px rgba(0, 0, 0, 0.5), 0 0 50px rgba(59, 130, 246, 0.1)", }} >
       <div style={{ textAlign: "center", marginBottom: "30px" }}>
         <div className="relative p-3 rounded-full flex items-center justify-center" style={{ width: '80px', height: '80px', margin: '0 auto 20px', background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", }} >
-          {/* Ícone removido conforme solicitado */}
+          <Circle className="h-full w-full text-white animate-spin" style={{ animationDuration: "10s" }} />
         </div>
         <h1 style={{ color: "white", fontSize: "28px", margin: "0 0 10px 0", fontWeight: "bold" }}> Planeta Projeto </h1>
         <p style={{ color: "#94a3b8", margin: 0 }}>Entre na sua conta para explorar o cosmos</p>
