@@ -63,7 +63,7 @@ interface Project {
   imageUrl?: string | null;
   videoUrl?: string | null;
   pdfUrl?: string | null;
-  ods?: number | null;
+  ods?: number[] | null;
   views?: number;
   comments?: Comment[];
   [key: string]: any;
@@ -262,7 +262,7 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ currentUser, projects, filt
 );
 
 const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, handleLogout, setCurrentView, uploadToCloudinary, uploadToSupabaseStorage, loadProjectsFromSupabase, setLoading, loading: parentLoading, odsOptions }) => {
-  const [projectData, setProjectData] = useState<{ title: string; category: string; description: string; ods: number | null; image: File | null; video: File | null; pdf: File | null; }>({ title: "", category: "Educação", description: "", ods: null, image: null, video: null, pdf: null, });
+  const [projectData, setProjectData] = useState<{ title: string; category: string; description: string; ods: number[]; image: File | null; video: File | null; pdf: File | null; }>({ title: "", category: "Educação", description: "", ods: [], image: null, video: null, pdf: null, });
   const [uploading, setUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -325,7 +325,7 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
       alert("Projeto enviado com sucesso!");
       setCurrentView("projects");
       loadProjectsFromSupabase();
-      setProjectData({ title: "", category: "Educação", description: "", ods: null, image: null, video: null, pdf: null, });
+      setProjectData({ title: "", category: "Educação", description: "", ods: [], image: null, video: null, pdf: null, });
 
     } catch (error: any) {
       console.error("Erro no processo de envio do projeto:", error);
@@ -343,7 +343,6 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
         <div className="flex flex-wrap items-center justify-between gap-y-3 min-h-[48px] w-full">
           <div className="flex items-center gap-3">
             <div className="relative p-2 sm:p-3 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)", width: '48px', height: '48px' }} >
-              <div className="w-full h-full rounded-full border-2 border-white/50 animate-spin" style={{animationDuration: '10s'}}></div>
               {[...Array(6)].map((_, i) => ( <div key={i} className="absolute w-2 h-2 bg-blue-300 rounded-full" style={{ top: `${Math.sin((i * Math.PI) / 3) * 25 + 50}%`, left: `${Math.cos((i * Math.PI) / 3) * 25 + 50}%`, animation: `orbit ${3 + i * 0.3}s linear infinite`, transformOrigin: "50% 50%", }} /> ))}
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-white">Planeta Projeto</h1>
@@ -364,7 +363,7 @@ const CreateProjectView: React.FC<CreateProjectViewProps> = ({ currentUser, hand
 
 // NOVO COMPONENTE DE EDIÇÃO
 const EditProjectView: React.FC<EditProjectViewProps> = ({ project, currentUser, handleLogout, setCurrentView, loadProjectsFromSupabase, setLoading, loading: parentLoading, odsOptions, setSelectedProject }) => {
-  const [projectData, setProjectData] = useState({ title: "", category: "Educação", description: "", ods: null as number | null });
+  const [projectData, setProjectData] = useState({ title: "", category: "Educação", description: "", ods: [] as number[] });
 
   useEffect(() => {
     if(project) {
@@ -372,7 +371,7 @@ const EditProjectView: React.FC<EditProjectViewProps> = ({ project, currentUser,
         title: project.title,
         description: project.description,
         category: project.category || 'Educação',
-        ods: project.ods || null
+        ods: project.ods || []
       });
     }
   }, [project]);
