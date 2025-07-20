@@ -1526,6 +1526,7 @@ export default function PlanetaProjeto() {
                           ref={videoInputRef}
                           type="file"
                           accept="video/*"
+                          capture="camcorder"
                           onChange={(e) => handleFileUpload(e.target.files, "videos")}
                           className="hidden"
                         />
