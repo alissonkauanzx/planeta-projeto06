@@ -1526,6 +1526,7 @@ export default function PlanetaProjeto() {
                           ref={videoInputRef}
                           type="file"
                           accept="video/*"
+                          capture="camcorder"
                           onChange={(e) => handleFileUpload(e.target.files, "videos")}
                           className="hidden"
                         />
@@ -1810,13 +1811,7 @@ export default function PlanetaProjeto() {
         >
           {/* Header do Modal FIXO - não atrapalha visualização */}
           <div
-            className="fixed top-0 left-0 right-0 z-[60] p-4 flex items-center justify-between"
-            style={{
-              background: "rgba(15, 23, 42, 0.98)",
-              backdropFilter: "blur(25px)",
-              borderBottom: "1px solid rgba(59, 130, 246, 0.3)",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-            }}
+            className="sticky top-0 left-0 right-0 z-[60] p-4 flex flex-wrap items-center justify-between gap-2 bg-slate-900/80 backdrop-blur-md border-b border-slate-700"
           >
             {/* Efeito de energia no header */}
             <div
@@ -1834,11 +1829,11 @@ export default function PlanetaProjeto() {
               }}
             />
 
-            <div className="flex items-center gap-4 relative z-10">
+            <div className="flex items-center gap-2">
               <Button
                 onClick={() => setCurrentView("projects")}
                 variant="outline"
-                className="h-11 px-5"
+                className="h-11 px-4 text-sm"
                 style={{
                   background: "rgba(71, 85, 105, 0.8)",
                   border: "1px solid rgba(71, 85, 105, 0.8)",
@@ -1852,7 +1847,7 @@ export default function PlanetaProjeto() {
               {/* Badge indicando permissão */}
               {canEdit && (
                 <Badge
-                  className="flex items-center gap-2 px-3 py-2"
+                  className="hidden sm:flex items-center gap-2 px-3 py-2"
                   style={{
                     background: currentUser?.isAdmin
                       ? "linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.3))"
@@ -1878,15 +1873,15 @@ export default function PlanetaProjeto() {
               )}
             </div>
 
-            <div className="flex items-center gap-3 relative z-10">
+            <div className="flex items-center gap-2">
               {/* Botões de Editar/Apagar - APENAS para dono do projeto ou admin */}
               {canEdit && (
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <Button
                     onClick={handleEdit}
                     size="sm"
                     variant="outline"
-                    className="h-11 px-4 relative overflow-hidden group bg-transparent"
+                    className="h-11 px-3 text-sm"
                     style={{
                       background: "rgba(59, 130, 246, 0.1)",
                       border: "1px solid rgba(59, 130, 246, 0.4)",
@@ -1894,15 +1889,15 @@ export default function PlanetaProjeto() {
                       boxShadow: "0 0 15px rgba(59, 130, 246, 0.3)",
                     }}
                   >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Editar
+                    <Edit className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Editar</span>
                   </Button>
 
                   <Button
                     onClick={handleDelete}
                     size="sm"
                     variant="outline"
-                    className="h-11 px-4 relative overflow-hidden group bg-transparent"
+                    className="h-11 px-3 text-sm"
                     style={{
                       background: "rgba(239, 68, 68, 0.1)",
                       border: "1px solid rgba(239, 68, 68, 0.4)",
@@ -1910,8 +1905,8 @@ export default function PlanetaProjeto() {
                       boxShadow: "0 0 15px rgba(239, 68, 68, 0.3)",
                     }}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Apagar
+                    <Trash2 className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Apagar</span>
                   </Button>
                 </div>
               )}
@@ -1919,8 +1914,8 @@ export default function PlanetaProjeto() {
               <Button
                 onClick={() => setCurrentView("projects")}
                 variant="ghost"
-                size="sm"
-                className="text-slate-400 hover:text-white h-11 w-11 relative z-10"
+                size="icon"
+                className="text-slate-400 hover:text-white h-11 w-11"
                 style={{
                   transition: "all 0.3s ease",
                 }}
