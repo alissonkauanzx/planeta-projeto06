@@ -533,12 +533,6 @@ export default function PlanetaProjeto() {
       return
     }
 
-    // Validação de senha
-    if (registerPasswordRef.current.length < 6) {
-      alert("A senha deve ter pelo menos 6 caracteres!")
-      return
-    }
-
     setLoading(true)
     
     try {
