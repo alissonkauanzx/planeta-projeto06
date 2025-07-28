@@ -367,10 +367,26 @@ export default function PlanetaProjeto() {
   const [newComment, setNewComment] = useState("")
 
   // Dados mockados dos usuários e projetos
-  const [users, setUsers] = useState([
-    { id: 1, email: "admin@planeta.com", password: "123456", isAdmin: true },
-    { id: 2, email: "user@planeta.com", password: "123456", isAdmin: false },
-  ])
+  const [users, setUsers] = useState(() => {
+    // Carrega usuários do localStorage ou usa dados padrão
+    if (typeof window !== 'undefined') {
+      const savedUsers = localStorage.getItem('planeta-users')
+      if (savedUsers) {
+        return JSON.parse(savedUsers)
+      }
+    }
+    return [
+      { id: 1, email: "admin@planeta.com", password: "123456", isAdmin: true },
+      { id: 2, email: "user@planeta.com", password: "123456", isAdmin: false },
+    ]
+  })
+
+  // useEffect para salvar usuários no localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && users && users.length > 0) {
+      localStorage.setItem('planeta-users', JSON.stringify(users))
+    }
+  }, [users])
 
   const [projects, setProjects] = useState([
     {
