@@ -55,6 +55,13 @@ const OptimizedSpaceBackground = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, [])
 
+  // useEffect para salvar usuários no localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && users && users.length > 0) {
+      localStorage.setItem('planeta-users', JSON.stringify(users))
+    }
+  }, [users])
+
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {/* Gradiente base espacial - estático para performance */}
@@ -367,10 +374,19 @@ export default function PlanetaProjeto() {
   const [newComment, setNewComment] = useState("")
 
   // Dados mockados dos usuários e projetos
-  const [users, setUsers] = useState([
-    { id: 1, email: "admin@planeta.com", password: "123456", isAdmin: true },
-    { id: 2, email: "user@planeta.com", password: "123456", isAdmin: false },
-  ])
+  const [users, setUsers] = useState(() => {
+    // Carrega usuários do localStorage ou usa dados padrão
+    if (typeof window !== 'undefined') {
+      const savedUsers = localStorage.getItem('planeta-users')
+      if (savedUsers) {
+        return JSON.parse(savedUsers)
+      }
+    }
+    return [
+      { id: 1, email: "admin@planeta.com", password: "123456", isAdmin: true },
+      { id: 2, email: "user@planeta.com", password: "123456", isAdmin: false },
+    ]
+  })
 
   const [projects, setProjects] = useState([
     {
@@ -472,21 +488,37 @@ export default function PlanetaProjeto() {
 
   // Funções de autenticação usando useCallback para evitar re-criação
   const handleLogin = useCallback(async () => {
-    setLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const user = users.find((u) => u.email === loginEmailRef.current && u.password === loginPasswordRef.current)
-    if (user) {
-      setCurrentUser(user)
-      setIsLoggedIn(true)
-      setCurrentView("projects")
-      loginEmailRef.current = ""
-      loginPasswordRef.current = ""
-    } else {
-      alert("Email ou senha incorretos!")
+    if (!loginEmailRef.current || !loginPasswordRef.current) {
+      alert("Preencha todos os campos!")
+      return
     }
-    setLoading(false)
-  }, [users])
+
+    setLoading(true)
+    
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Usar callback para acessar o estado atual dos usuários
+      setUsers(currentUsers => {
+        const user = currentUsers.find((u) => u.email === loginEmailRef.current && u.password === loginPasswordRef.current)
+        if (user) {
+          setCurrentUser(user)
+          setIsLoggedIn(true)
+          setCurrentView("projects")
+          loginEmailRef.current = ""
+          loginPasswordRef.current = ""
+        } else {
+          alert("Email ou senha incorretos!")
+        }
+        setLoading(false)
+        return currentUsers
+      })
+    } catch (error) {
+      console.error("Erro ao fazer login:", error)
+      alert("Erro ao fazer login. Tente novamente.")
+      setLoading(false)
+    }
+  }, [])
 
   const handleRegister = useCallback(async () => {
     if (!registerEmailRef.current || !registerPasswordRef.current) {
@@ -494,28 +526,53 @@ export default function PlanetaProjeto() {
       return
     }
 
-    if (users.find((u) => u.email === registerEmailRef.current)) {
-      alert("Este email já está cadastrado!")
+    // Validação de email básica
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(registerEmailRef.current)) {
+      alert("Por favor, insira um email válido!")
+      return
+    }
+
+    // Validação de senha
+    if (registerPasswordRef.current.length < 6) {
+      alert("A senha deve ter pelo menos 6 caracteres!")
       return
     }
 
     setLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const newUser = {
-      id: Date.now(),
-      email: registerEmailRef.current,
-      password: registerPasswordRef.current,
-      isAdmin: false,
+      // Usar callback para verificar usuários existentes e adicionar novo usuário
+      setUsers(currentUsers => {
+        if (currentUsers.find((u) => u.email === registerEmailRef.current)) {
+          alert("Este email já está cadastrado!")
+          setLoading(false)
+          return currentUsers
+        }
+
+        const newUser = {
+          id: Date.now(),
+          email: registerEmailRef.current,
+          password: registerPasswordRef.current,
+          isAdmin: false,
+        }
+
+        alert("Conta criada com sucesso! Você pode fazer login agora.")
+        setCurrentView("login")
+        registerEmailRef.current = ""
+        registerPasswordRef.current = ""
+        setLoading(false)
+        
+        return [...currentUsers, newUser]
+      })
+    } catch (error) {
+      console.error("Erro ao registrar usuário:", error)
+      alert("Erro ao criar conta. Tente novamente.")
+      setLoading(false)
     }
-
-    setUsers([...users, newUser])
-    alert("Conta criada com sucesso!")
-    setCurrentView("login")
-    registerEmailRef.current = ""
-    registerPasswordRef.current = ""
-    setLoading(false)
-  }, [users])
+  }, [])
 
   const handleLogout = useCallback(() => {
     setCurrentUser(null)
