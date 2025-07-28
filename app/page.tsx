@@ -55,12 +55,7 @@ const OptimizedSpaceBackground = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, [])
 
-  // useEffect para salvar usuários no localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && users && users.length > 0) {
-      localStorage.setItem('planeta-users', JSON.stringify(users))
-    }
-  }, [users])
+
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -387,6 +382,13 @@ export default function PlanetaProjeto() {
       { id: 2, email: "user@planeta.com", password: "123456", isAdmin: false },
     ]
   })
+
+  // useEffect para salvar usuários no localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && users && users.length > 0) {
+      localStorage.setItem('planeta-users', JSON.stringify(users))
+    }
+  }, [users])
 
   const [projects, setProjects] = useState([
     {
